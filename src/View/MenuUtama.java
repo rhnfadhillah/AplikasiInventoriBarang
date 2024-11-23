@@ -143,18 +143,21 @@ public class MenuUtama extends javax.swing.JFrame {
 
     private void btnStokActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnStokActionPerformed
         // TODO add your handling code here:
+        // Membuka form MenuStok dan menutup form saat ini.
         new MenuStok().setVisible(true);
         dispose();
     }//GEN-LAST:event_btnStokActionPerformed
 
     private void btnBarangActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnBarangActionPerformed
         // TODO add your handling code here:
+        // Membuka form MenuBarang dan menutup form saat ini.
         new MenuBarang().setVisible(true);
         dispose();
     }//GEN-LAST:event_btnBarangActionPerformed
 
     private void btnTransaksiActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnTransaksiActionPerformed
         // TODO add your handling code here:
+        // Membuka form MenuTransaksi dan menutup form saat ini.
         new MenuTransaksi().setVisible(true);
         dispose();
     }//GEN-LAST:event_btnTransaksiActionPerformed

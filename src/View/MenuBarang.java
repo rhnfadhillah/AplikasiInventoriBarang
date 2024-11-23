@@ -18,24 +18,31 @@ import javax.swing.table.DefaultTableModel;
  * @author rhnfa
  */
 public class MenuBarang extends javax.swing.JFrame {
-private BarangController barangController;
+private BarangController barangController; // Deklarasi variabel barangController untuk mengelola data barang
     /**
      * Creates new form MenuBarang
      */
     public MenuBarang() {
         initComponents();
+        
+        // Memanggil controller untuk mengatur data barang.
         barangController = new BarangController(this);
+        
+        // Memuat data barang ke tabel saat menu barang dibuat.
         barangController.loadBarangData();
+            
         tableBarang.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent evt) {
-                int selectedRow = tableBarang.getSelectedRow();
-                if (selectedRow != -1) {
-                String idBarangString = (String) tableBarang.getValueAt(selectedRow, 0); // Ambil ID sebagai String
-                int idBarang = Integer.parseInt(idBarangString); // Konversi String ke Integer
+                int selectedRow = tableBarang.getSelectedRow(); // Mendapatkan indeks baris yang diklik.
+                if (selectedRow != -1) { // Jika baris valid dipilih.
+                // Mengambil data dari baris yang dipilih berdasarkan indeks kolom.
+                String idBarangString = (String) tableBarang.getValueAt(selectedRow, 0); 
+                int idBarang = Integer.parseInt(idBarangString); // Mengubah ID barang menjadi integer.
                 String namaBarang = (String) tableBarang.getValueAt(selectedRow, 1);
                 String jenisBarang = (String) tableBarang.getValueAt(selectedRow, 2);
-                // Isi field dengan data yang dipilih
+                
+                // Mengisi field nama dan jenis barang di GUI berdasarkan data tabel.
                 txtNama.setText(namaBarang);
                 comboJenis.setSelectedItem(jenisBarang);
                 }
@@ -43,15 +50,17 @@ private BarangController barangController;
         });
     }
     
+    // Method untuk melakukan update tabel barang
    public void updateBarangTable(List<String[]> daftarBarang) {
-        DefaultTableModel model = (DefaultTableModel) tableBarang.getModel();
-        model.setRowCount(0); // Menghapus baris yang ada sebelumnya
+        DefaultTableModel model = (DefaultTableModel) tableBarang.getModel(); // Mendapatkan model tabel.
+        model.setRowCount(0); // Menghapus semua baris di tabel sebelum memuat data baru.
 
         for (String[] barang : daftarBarang) {
-            model.addRow(barang); // Menambahkan setiap barang ke tabel sebagai baris
+            model.addRow(barang);  // Menambahkan setiap baris data barang ke model tabel.
         }
     }
    
+   // Method untuk menampilkan pesan error
    public void showError(String message) {
         JOptionPane.showMessageDialog(this, message, "Error", JOptionPane.ERROR_MESSAGE);
     }
@@ -233,92 +242,110 @@ private BarangController barangController;
 
     private void btnSimpanActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnSimpanActionPerformed
         // TODO add your handling code here:
-        String namaBarang = txtNama.getText();
-        String jenisBarang = (String) comboJenis.getSelectedItem();
+        String namaBarang = txtNama.getText(); // Mengambil input nama barang dari field.
+        String jenisBarang = (String) comboJenis.getSelectedItem(); // Mengambil input jenis barang dari combo box.
+
+        // Validasi apakah nama barang dan jenis barang sudah diisi.
         if (!namaBarang.isEmpty() && !jenisBarang.equals("Pilih Jenis Barang")) {
             try {
+                // Menyimpan barang baru melalui controller.
                 barangController.tambahBarang(namaBarang, jenisBarang);
                 JOptionPane.showMessageDialog(this, "Barang berhasil disimpan.", "Sukses", JOptionPane.INFORMATION_MESSAGE);
-                txtNama.setText(""); // Reset input
-                comboJenis.setSelectedIndex(0); // Reset combo box
+                
+                // Mengosongkan field input setelah menyimpan.
+                txtNama.setText("");
+                comboJenis.setSelectedIndex(0);
             } catch (Exception e) {
-                showError("Gagal menyimpan barang: " + e.getMessage());
+                showError("Gagal menyimpan barang: " + e.getMessage());  // Menampilkan pesan error jika gagal.
             }
         } else {
-            showError("Nama barang dan jenis barang harus diisi!");
+            showError("Nama barang dan jenis barang harus diisi!"); // Menampilkan error jika validasi gagal.
         }
     }//GEN-LAST:event_btnSimpanActionPerformed
 
     private void btnUbahActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnUbahActionPerformed
         // TODO add your handling code here:
-        int selectedRow = tableBarang.getSelectedRow();
+        int selectedRow = tableBarang.getSelectedRow();  // Mendapatkan baris yang dipilih.
 
-        if (selectedRow != -1) {
+        if (selectedRow != -1) { // Jika ada baris yang dipilih.
+            
+            // Mengambil data baru dari field input.
             String namaBarangBaru = txtNama.getText();
             String jenisBarangBaru = (String) comboJenis.getSelectedItem();
+            
+            // Mengambil ID barang dari baris yang dipilih.
             String idBarangString = (String) tableBarang.getValueAt(selectedRow, 0);
             int idBarang = Integer.parseInt(idBarangString);
+            // Validasi apakah input baru sudah diisi.
             if (!namaBarangBaru.isEmpty() && !jenisBarangBaru.equals("Pilih Jenis Barang")) {
                 try {
+                    // Mengupdate barang melalui controller.
                     barangController.updateBarang(idBarang, namaBarangBaru, jenisBarangBaru);
                     JOptionPane.showMessageDialog(this, "Barang berhasil diubah.", "Sukses", JOptionPane.INFORMATION_MESSAGE);
-                    txtNama.setText(""); // Reset input
-                    comboJenis.setSelectedIndex(0); // Reset combo box
+                    // Mengosongkan field input setelah mengubah.
+                    txtNama.setText("");
+                    comboJenis.setSelectedIndex(0);
                 } catch (Exception e) {
-                    showError("Gagal mengubah barang: " + e.getMessage());
+                    showError("Gagal mengubah barang: " + e.getMessage()); // Menampilkan pesan error jika gagal.
                 }
             } else {
-                showError("Nama barang dan jenis barang harus diisi!");
+                showError("Nama barang dan jenis barang harus diisi!"); // Menampilkan error jika validasi gagal.
             }
         } else {
-            showError("Silakan pilih barang yang ingin diubah.");
+            showError("Silakan pilih barang yang ingin diubah."); // Menampilkan error jika tidak ada baris yang dipilih.
         }
     }//GEN-LAST:event_btnUbahActionPerformed
 
     private void btnHapusActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnHapusActionPerformed
         // TODO add your handling code here:
-        int selectedRow = tableBarang.getSelectedRow();
+        int selectedRow = tableBarang.getSelectedRow();  // Mendapatkan baris yang dipilih.
 
-        if (selectedRow != -1) {
+        if (selectedRow != -1) { // Jika ada baris yang dipilih.
+            
+            // Mengambil ID barang dari baris yang dipilih.
             String idBarangString = (String) tableBarang.getValueAt(selectedRow, 0);
             int idBarang = Integer.parseInt(idBarangString);
-            // Menampilkan dialog konfirmasi
+            // Konfirmasi penghapusan.
             int confirm = JOptionPane.showConfirmDialog(this, 
                 "Apakah Anda yakin ingin menghapus barang ini?", 
                 "Konfirmasi Hapus", 
                 JOptionPane.YES_NO_OPTION, 
                 JOptionPane.QUESTION_MESSAGE);
-            // Jika pengguna memilih "Ya"
-            if (confirm == JOptionPane.YES_OPTION) {
+            if (confirm == JOptionPane.YES_OPTION) {   // Jika pengguna mengonfirmasi.
                 try {
+                    // Menghapus barang melalui controller.
                     barangController.hapusBarang(idBarang);
                     JOptionPane.showMessageDialog(this, "Barang berhasil dihapus.", "Sukses", JOptionPane.INFORMATION_MESSAGE);
+                    
+                    // Mengosongkan field input setelah menghapus.
                     txtNama.setText("");
                     comboJenis.setSelectedIndex(0);
-                    // Tambahkan logika untuk memperbarui tampilan tabel jika diperlukan
                 } catch (Exception e) {
-                    showError("Gagal menghapus barang: " + e.getMessage());
+                    showError("Gagal menghapus barang: " + e.getMessage());  // Menampilkan pesan error jika gagal.
                 }
             }
         } else {
-            showError("Silakan pilih barang yang ingin dihapus.");
+            showError("Silakan pilih barang yang ingin dihapus.");  // Menampilkan error jika tidak ada baris yang dipilih.
         }
     }//GEN-LAST:event_btnHapusActionPerformed
 
     private void menuStokMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_menuStokMouseClicked
         // TODO add your handling code here:
+        // Membuka form MenuStok dan menutup form saat ini.
         new MenuStok().setVisible(true);
         dispose();
     }//GEN-LAST:event_menuStokMouseClicked
 
     private void menuTransaksiMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_menuTransaksiMouseClicked
         // TODO add your handling code here:
+        // Membuka form MenuTransaksi dan menutup form saat ini.
         new MenuTransaksi().setVisible(true);
         dispose();
     }//GEN-LAST:event_menuTransaksiMouseClicked
 
     private void menuHomeMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_menuHomeMouseClicked
         // TODO add your handling code here:
+        // Membuka form MenuHome dan menutup form saat ini.
         new MenuUtama().setVisible(true);
         dispose();
     }//GEN-LAST:event_menuHomeMouseClicked

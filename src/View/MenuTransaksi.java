@@ -15,44 +15,44 @@ import javax.swing.table.DefaultTableModel;
  * @author rhnfa
  */
 public class MenuTransaksi extends javax.swing.JFrame {
-private TransaksiController transaksiController;
-private List<String[]> daftarBarang;
+private TransaksiController transaksiController; // Deklarasi variabel untuk mengelola data transaksi
+private List<String[]> daftarBarang; // Deklarasi list untuk menyimpan data barang
     /**
      * Creates new form MenuTransaksi
      */
     public MenuTransaksi() {
         initComponents();
-        populateComboBarang();
-        transaksiController = new TransaksiController(this);
-        transaksiController.loadTransaksiData();
+        populateComboBarang(); // Mengisi combo box dengan daftar barang
+        transaksiController = new TransaksiController(this); // Membuat TransaksiController dan menghubungkannya dengan MenuTransaksi
+        transaksiController.loadTransaksiData(); // Memuat data transaksi saat menu transaksi ditampilkan
     }
       public void showError(String message) {
+        // Menampilkan pesan kesalahan dalam dialog
         JOptionPane.showMessageDialog(this, message, "Error", JOptionPane.ERROR_MESSAGE);
     }
     
     
     public void updateTransaksiTabel(List<String[]> daftarTransaksi) {
-        DefaultTableModel model = (DefaultTableModel) tabelTransaksi.getModel();
-        model.setRowCount(0); // Menghapus baris yang ada sebelumnya
+        DefaultTableModel model = (DefaultTableModel) tabelTransaksi.getModel(); // Mendapatkan model tabel transaksi
+        model.setRowCount(0); // Menghapus semua baris yang ada di tabel
 
         for (String[] transaksi : daftarTransaksi) {
-            model.addRow(transaksi); // Menambahkan setiap transaksi ke tabel sebagai baris
+            model.addRow(transaksi);  // Menambahkan baris baru untuk setiap transaksi
         }
     }
     
+    // Mengisi comboBarang dari transaksiController
     private void populateComboBarang() {
-        transaksiController = new TransaksiController(this);
-        List<String[]> daftarBarang = transaksiController.getNamaDanId(); // Memanggil fungsi yang diperbaiki
-        // Menghapus semua item dalam combo box
-        comboBarang.removeAllItems();
-        comboBarang.addItem("-- Pilih Barang --"); // Item default
-        // Menambahkan item ke combo box
+        transaksiController = new TransaksiController(this); // Membuat instance baru dari TransaksiController
+        List<String[]> daftarBarang = transaksiController.getNamaDanId(); // Mengambil daftar nama dan ID barang dari transaksiController
+        comboBarang.removeAllItems();  // Menghapus semua item yang ada di combo box
+        comboBarang.addItem("-- Pilih Barang --");  // Menambahkan item default ke combo box
         for (String[] barang : daftarBarang) {
-            comboBarang.addItem(barang[1]); // Menambahkan nama barang
+            comboBarang.addItem(barang[1]);   // Menambahkan nama barang ke combo box
         }
-        // Simpan daftar barang untuk referensi ID stok
-        this.daftarBarang = daftarBarang;
-}
+        
+        this.daftarBarang = daftarBarang;  // Menyimpan daftar barang ke variabel instance
+    }
 
     /**
      * This method is called from within the constructor to initialize the form.
@@ -285,8 +285,8 @@ private List<String[]> daftarBarang;
 
     private void btnSimpanActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnSimpanActionPerformed
         // TODO add your handling code here:
-        int id_stok = -1; // Inisialisasi dengan nilai yang tidak valid
-        String namaBarang = (String) comboBarang.getSelectedItem();
+        int id_stok = -1; // Inisialisasi ID stok dengan nilai tidak valid
+        String namaBarang = (String) comboBarang.getSelectedItem(); // Mengambil nama barang yang dipilih dari combo box
         // Mencari ID stok berdasarkan nama barang
         for (String[] barang : daftarBarang) {
             if (barang[1].equals(namaBarang)) {
@@ -334,11 +334,11 @@ private List<String[]> daftarBarang;
             int jumlah_barang = (Integer) spinnerJumlah.getValue();
             // Memanggil metode untuk memperbarui transaksi
             if (id_stok != -1) { // Pastikan ID stok valid
-                transaksiController.updateTransaksi(id_transaksi, id_stok, jenis_transaksi, jumlah_barang);
+                transaksiController.updateTransaksi(id_transaksi, id_stok, jenis_transaksi, jumlah_barang); // Memanggil metode untuk update 
                 // Reset form setelah mengubah
                 comboBarang.setSelectedIndex(0); // Mengatur combo box ke item default
                 spinnerJumlah.setValue(1); // Mengatur spinner ke nilai default
-                buttonGroup1.clearSelection();
+                buttonGroup1.clearSelection(); // Menghapus pilihan radio button
             } else {
                 // Menampilkan pesan kesalahan jika tidak ada barang yang dipilih
               JOptionPane.showMessageDialog(this, "Silakan pilih barang terlebih dahulu.", "Error", javax.swing.JOptionPane.ERROR_MESSAGE);
@@ -351,8 +351,8 @@ private List<String[]> daftarBarang;
 
     private void btnHapusActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnHapusActionPerformed
         // TODO add your handling code here:
-        int selectedRow = tabelTransaksi.getSelectedRow();
-        if (selectedRow != -1) {
+        int selectedRow = tabelTransaksi.getSelectedRow(); // Mengambil baris yang dipilih dari tabel transaksi
+        if (selectedRow != -1) { // Pastikan ada baris yang dipilih
             String idTransaksiString = (String) tabelTransaksi.getValueAt(selectedRow, 0);
             int idTransaksi = Integer.parseInt(idTransaksiString);
             // Menampilkan dialog konfirmasi
@@ -364,12 +364,11 @@ private List<String[]> daftarBarang;
             // Jika pengguna memilih "Ya"
             if (confirm == JOptionPane.YES_OPTION) {
                 try {
-                    transaksiController.hapusTransaksi(idTransaksi);
+                    transaksiController.hapusTransaksi(idTransaksi); // Memanggil metode untuk menghapus 
                     JOptionPane.showMessageDialog(this, "Transaksi berhasil dihapus.", "Sukses", JOptionPane.INFORMATION_MESSAGE);
-                    comboBarang.setSelectedIndex(0);
-                    spinnerJumlah.setValue(1);
-                    buttonGroup1.clearSelection();
-                    // Tambahkan logika untuk memperbarui tampilan tabel jika diperlukan
+                    comboBarang.setSelectedIndex(0);  // Mengatur combo box ke item default
+                    spinnerJumlah.setValue(1);  // Mengatur spinner ke nilai default
+                    buttonGroup1.clearSelection(); // Menghapus pilihan radio button
                 } catch (Exception e) {
                     showError("Gagal menghapus barang: " + e.getMessage());
                 }
@@ -408,18 +407,21 @@ private List<String[]> daftarBarang;
 
     private void menuStokMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_menuStokMouseClicked
         // TODO add your handling code here:
+        // Membuka form MenuStok dan menutup form saat ini.
         new MenuStok().setVisible(true);
         dispose();
     }//GEN-LAST:event_menuStokMouseClicked
 
     private void menuBarangMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_menuBarangMouseClicked
         // TODO add your handling code here:
+        // Membuka form MenuBarang dan menutup form saat ini.
         new MenuBarang().setVisible(true);
         dispose();
     }//GEN-LAST:event_menuBarangMouseClicked
 
     private void menuHomeMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_menuHomeMouseClicked
         // TODO add your handling code here:
+        // Membuka form MenuHome dan menutup form saat ini.
         new MenuUtama().setVisible(true);
         dispose();
     }//GEN-LAST:event_menuHomeMouseClicked

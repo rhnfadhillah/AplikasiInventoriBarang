@@ -1,33 +1,26 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
+
 package View;
 
 import Controller.StokController;
 import java.util.List;
 import javax.swing.table.DefaultTableModel;
-/**
- *
- * @author rhnfa
- */
+
 public class MenuStok extends javax.swing.JFrame {
 private StokController stokController;
-    /**
-     * Creates new form MenuStok
-     */
     public MenuStok() {
         initComponents();
+        // Memanggil controller untuk mengatur data barang.
         stokController = new StokController(this);
+        
+        // Memuat data barang ke tabel saat menu barang dibuat.
         stokController.loadStokData();
     }
     
     public void updateStokTable(List<Object[]> daftarStok) {
-        DefaultTableModel model = (DefaultTableModel) tableStok.getModel();
-        model.setRowCount(0); // Menghapus baris yang ada sebelumnya
+        DefaultTableModel model = (DefaultTableModel) tableStok.getModel(); // Mendapatkan model tabel.
+        model.setRowCount(0); // Menghapus semua baris di tabel sebelum memuat data baru
         for (Object[] stok : daftarStok) {
-            model.addRow(stok); // Menambahkan setiap stok ke tabel sebagai baris
+            model.addRow(stok); // Menambahkan setiap baris data stok ke model tabel.
         }
     }
 
@@ -122,18 +115,21 @@ private StokController stokController;
 
     private void menuBarangMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_menuBarangMouseClicked
         // TODO add your handling code here:
+        // Membuka form MenuBarang dan menutup form saat ini.
         new MenuBarang().setVisible(true);
         dispose();
     }//GEN-LAST:event_menuBarangMouseClicked
 
     private void menuTransaksiMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_menuTransaksiMouseClicked
         // TODO add your handling code here:
+        // Membuka form MenuTransaksi dan menutup form saat ini.
         new MenuTransaksi().setVisible(true);
         dispose();
     }//GEN-LAST:event_menuTransaksiMouseClicked
 
     private void menuHomeMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_menuHomeMouseClicked
         // TODO add your handling code here:
+        // Membuka form MenuHome dan menutup form saat ini.
         new MenuUtama().setVisible(true);
         dispose();
     }//GEN-LAST:event_menuHomeMouseClicked
