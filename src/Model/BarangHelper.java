@@ -11,8 +11,10 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
+import javax.swing.JOptionPane;
 
 /**
  *
@@ -108,4 +110,53 @@ public class BarangHelper {
          return daftarBarang; // Mengembalikan daftar barang
      }
     
+     public boolean barangExists(String namaBarang) {
+        String sql = "SELECT COUNT(*) FROM barang WHERE nama_barang = ?";
+        try (Connection connection = conn.getConnection();
+            PreparedStatement pstmt = connection.prepareStatement(sql)) {
+            pstmt.setString(1, namaBarang);
+            ResultSet rs = pstmt.executeQuery();
+            if (rs.next()) { // Pastikan ada hasil
+                return rs.getInt(1) > 0; // Kembalikan true jika barang ada
+            }   
+        } catch (SQLException e) {
+            System.err.println("Error saat melakukan cek barang: " + e.getMessage());
+        }
+         return false;
+    }
+     
+     public void cekDanTambahBarang(String namaBarang, int stok) {
+        String jenisBarang = "Barang Baru";
+        if (!barangExists(namaBarang)) { // Cek apakah barang sudah ada
+            // Tambahkan barang terlebih dahulu
+            String insertBarangQuery = "INSERT INTO barang(nama_barang, jenis_barang) VALUES(?, ?)";
+            try (Connection connection = conn.getConnection(); 
+                PreparedStatement pstmt = connection.prepareStatement(insertBarangQuery, Statement.RETURN_GENERATED_KEYS)) {
+                pstmt.setString(1, namaBarang);
+                pstmt.setString(2, jenisBarang);
+                pstmt.executeUpdate(); // Menjalankan query untuk menambah barang
+                // Ambil ID barang yang baru ditambahkan
+                ResultSet generatedKeys = pstmt.getGeneratedKeys();
+                if (generatedKeys.next()) {
+                    int idBarangBaru = generatedKeys.getInt(1); // Ambil id_barang yang baru ditambahkan
+                    // Perbarui stok menggunakan id_barang
+                    String updateStokQuery = "UPDATE stok SET stok = stok + ? WHERE id_barang = ?";
+                    try (PreparedStatement pstmtUpdate = connection.prepareStatement(updateStokQuery)) {
+                        pstmtUpdate.setInt(1, stok); // Tambahkan jumlah stok
+                        pstmtUpdate.setInt(2, idBarangBaru); // ID barang yang baru
+                        int rowsAffected = pstmtUpdate.executeUpdate(); // Menjalankan query untuk memperbarui stok               
+                        if (rowsAffected > 0) {
+                            System.out.println("Jumlah stok berhasil diperbarui untuk barang dengan ID: " + idBarangBaru);
+                        } else {
+                            System.out.println("Tidak ada stok yang diperbarui. Pastikan ID barang ada di tabel stok.");
+                        }
+                    }
+                }
+            } catch (SQLException e) {
+                System.err.println("Error saat menambahkan barang dan memperbarui stok: " + e.getMessage());
+            }
+        } else {
+            System.out.println("Barang sudah ada: " + namaBarang); // Notifikasi jika barang sudah ada
+        }
+    }
 }

@@ -2,7 +2,14 @@
 package View;
 
 import Controller.StokController;
+import Model.BarangHelper;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileReader;
+import java.io.IOException;
+import java.io.PrintWriter;
 import java.util.List;
+import javax.swing.JOptionPane;
 import javax.swing.table.DefaultTableModel;
 
 public class MenuStok extends javax.swing.JFrame {
@@ -36,6 +43,8 @@ private StokController stokController;
         jPanel1 = new javax.swing.JPanel();
         jScrollPane1 = new javax.swing.JScrollPane();
         tableStok = new javax.swing.JTable();
+        btnImport = new javax.swing.JButton();
+        btnExport = new javax.swing.JButton();
         jMenuBar1 = new javax.swing.JMenuBar();
         menuHome = new javax.swing.JMenu();
         menuTransaksi = new javax.swing.JMenu();
@@ -59,18 +68,42 @@ private StokController stokController;
         ));
         jScrollPane1.setViewportView(tableStok);
 
+        btnImport.setText("Import");
+        btnImport.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnImportActionPerformed(evt);
+            }
+        });
+
+        btnExport.setText("Export");
+        btnExport.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnExportActionPerformed(evt);
+            }
+        });
+
         javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
         jPanel1.setLayout(jPanel1Layout);
         jPanel1Layout.setHorizontalGroup(
             jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 648, Short.MAX_VALUE)
+            .addComponent(jScrollPane1, javax.swing.GroupLayout.Alignment.TRAILING)
+            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel1Layout.createSequentialGroup()
+                .addContainerGap(176, Short.MAX_VALUE)
+                .addComponent(btnExport)
+                .addGap(150, 150, 150)
+                .addComponent(btnImport)
+                .addGap(182, 182, 182))
         );
         jPanel1Layout.setVerticalGroup(
             jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel1Layout.createSequentialGroup()
-                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 259, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(172, 172, 172))
+            .addGroup(jPanel1Layout.createSequentialGroup()
+                .addContainerGap()
+                .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 173, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGap(48, 48, 48)
+                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(btnImport)
+                    .addComponent(btnExport))
+                .addContainerGap(47, Short.MAX_VALUE))
         );
 
         menuHome.setText("Home");
@@ -107,7 +140,7 @@ private StokController stokController;
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(jPanel1, javax.swing.GroupLayout.PREFERRED_SIZE, 344, javax.swing.GroupLayout.PREFERRED_SIZE)
+            .addComponent(jPanel1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
         );
 
         pack();
@@ -133,6 +166,68 @@ private StokController stokController;
         new MenuUtama().setVisible(true);
         dispose();
     }//GEN-LAST:event_menuHomeMouseClicked
+
+    private void btnExportActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnExportActionPerformed
+        // TODO add your handling code here:
+        // Mendapatkan model dari tabel
+        DefaultTableModel model = (DefaultTableModel) tableStok.getModel();
+        // Menentukan jalur untuk file CSV
+        String filePath = "stok.csv"; // Anda bisa mengubah jalur ini sesuai kebutuhan
+        try (PrintWriter writer = new PrintWriter(new File(filePath))) {
+            // Menulis header
+            for (int i = 0; i < model.getColumnCount(); i++) {
+                writer.print(model.getColumnName(i));
+                if (i < model.getColumnCount() - 1) {
+                    writer.print(",");
+                }
+            }
+            writer.println();
+            // Menulis data baris
+            for (int i = 0; i < model.getRowCount(); i++) {
+                for (int j = 0; j < model.getColumnCount(); j++) {
+                    writer.print(model.getValueAt(i, j));
+                    if (j < model.getColumnCount() - 1) {
+                        writer.print(",");
+                    }
+                }
+                writer.println();
+            }
+            JOptionPane.showMessageDialog(this, "Data berhasil diekspor ke " + filePath);
+        } catch (IOException e) {
+            JOptionPane.showMessageDialog(this, "Terjadi kesalahan saat mengekspor data: " + e.getMessage());
+        }
+    }//GEN-LAST:event_btnExportActionPerformed
+
+    private void btnImportActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnImportActionPerformed
+        // TODO add your handling code here:
+        // Menentukan jalur untuk file CSV
+        String filePath = "stok.csv"; // Anda bisa mengubah jalur ini sesuai kebutuhan
+        try (BufferedReader reader = new BufferedReader(new FileReader(filePath))) {
+        String line;
+        reader.readLine(); // Lewati baris header
+        while ((line = reader.readLine()) != null) {
+            String[] data = line.split(","); // Memisahkan data berdasarkan koma
+            if (data.length == 2) { // Pastikan ada dua kolom (Nama Barang dan Stok)
+                String namaBarang = data[0].trim(); // Menghapus spasi di awal dan akhir
+                String jumlah_stok = data[1].trim(); // Menghapus spasi di awal dan akhir
+                int stok = Integer.parseInt(jumlah_stok);
+                // Memeriksa apakah barang sudah ada
+                BarangHelper barangHelper = new BarangHelper();
+                if (barangHelper.barangExists(namaBarang)) {
+                    JOptionPane.showMessageDialog(this, "Barang dengan nama '" + namaBarang + "' sudah ada. Barang ini akan diabaikan.", "Duplikat Ditemukan", JOptionPane.WARNING_MESSAGE);
+                } else {
+                    // Menambahkan barang jika belum ada
+                    barangHelper.cekDanTambahBarang(namaBarang, stok);
+                }
+            }
+        }
+        // Setelah import, muat ulang data dari database ke tabel
+        stokController.loadStokData();
+        JOptionPane.showMessageDialog(this, "Data berhasil diimpor dari " + filePath, "Sukses", JOptionPane.INFORMATION_MESSAGE);
+        } catch (IOException e) {
+            JOptionPane.showMessageDialog(this, "Terjadi kesalahan saat mengimpor data: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+        }
+    }//GEN-LAST:event_btnImportActionPerformed
 
     /**
      * @param args the command line arguments
@@ -173,6 +268,8 @@ private StokController stokController;
     }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
+    private javax.swing.JButton btnExport;
+    private javax.swing.JButton btnImport;
     private javax.swing.JMenuBar jMenuBar1;
     private javax.swing.JPanel jPanel1;
     private javax.swing.JScrollPane jScrollPane1;
