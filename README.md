@@ -1859,15 +1859,19 @@ Sebelum menjalankan aplikasi ini, pastikan Anda telah memenuhi syarat berikut:
    ```
 ## Screenshots
 1. Menu Utama
+
 ![Screenshot 2024-11-23 155058](https://github.com/user-attachments/assets/7f83c089-c199-4f48-b090-1b128f4ccf80)
 
 2. Menu Stok
+
 ![Screenshot 2024-11-23 155108](https://github.com/user-attachments/assets/933425a3-f854-46f5-93e8-698a20944887)
 
 3. Menu Barang
+
 ![Screenshot 2024-11-23 155114](https://github.com/user-attachments/assets/15ad2869-f7a3-4298-9c68-3729fdfdfc2b)
 
 4. Menu Transaksi
+
 ![Screenshot 2024-11-23 155119](https://github.com/user-attachments/assets/05114f81-1401-4ef0-a32f-80c234936a83)
 
 
