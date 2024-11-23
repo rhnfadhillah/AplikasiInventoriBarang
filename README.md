@@ -46,6 +46,9 @@ Sebelum menjalankan aplikasi ini, pastikan Anda telah memenuhi syarat berikut:
 - **Hapus Transaksi**: Pengguna dapat menghapus transaksi yang tidak lagi relevan.
 - **Tampilkan Daftar Transaksi**: Menampilkan semua transaksi yang telah dicatat, termasuk detail seperti nama barang, jenis transaksi, jumlah, dan tanggal.
 
+4. Export dan Import data
+- **Export** : Pengguna dapat mengexport data stok ke dalam file berformat.csv.
+- **Import** : Pengguna dapat mengimport data dari stok.csv yang ada.
 
 
 ## Cara Menjalankan
@@ -172,6 +175,55 @@ Sebelum menjalankan aplikasi ini, pastikan Anda telah memenuhi syarat berikut:
                  }
                  return daftarBarang; // Mengembalikan daftar barang
              }
+          public boolean barangExists(String namaBarang) {
+                String sql = "SELECT COUNT(*) FROM barang WHERE nama_barang = ?";
+                try (Connection connection = conn.getConnection();
+                    PreparedStatement pstmt = connection.prepareStatement(sql)) {
+                    pstmt.setString(1, namaBarang);
+                    ResultSet rs = pstmt.executeQuery();
+                    if (rs.next()) { // Pastikan ada hasil
+                        return rs.getInt(1) > 0; // Kembalikan true jika barang ada
+                    }   
+                } catch (SQLException e) {
+                    System.err.println("Error saat melakukan cek barang: " + e.getMessage());
+                }
+                 return false;
+            }
+             
+             public void cekDanTambahBarang(String namaBarang, int stok) {
+                String jenisBarang = "Barang Baru";
+                if (!barangExists(namaBarang)) { // Cek apakah barang sudah ada
+                    // Tambahkan barang terlebih dahulu
+                    String insertBarangQuery = "INSERT INTO barang(nama_barang, jenis_barang) VALUES(?, ?)";
+                    try (Connection connection = conn.getConnection(); 
+                        PreparedStatement pstmt = connection.prepareStatement(insertBarangQuery, Statement.RETURN_GENERATED_KEYS)) {
+                        pstmt.setString(1, namaBarang);
+                        pstmt.setString(2, jenisBarang);
+                        pstmt.executeUpdate(); // Menjalankan query untuk menambah barang
+                        // Ambil ID barang yang baru ditambahkan
+                        ResultSet generatedKeys = pstmt.getGeneratedKeys();
+                        if (generatedKeys.next()) {
+                            int idBarangBaru = generatedKeys.getInt(1); // Ambil id_barang yang baru ditambahkan
+                            // Perbarui stok menggunakan id_barang
+                            String updateStokQuery = "UPDATE stok SET stok = stok + ? WHERE id_barang = ?";
+                            try (PreparedStatement pstmtUpdate = connection.prepareStatement(updateStokQuery)) {
+                                pstmtUpdate.setInt(1, stok); // Tambahkan jumlah stok
+                                pstmtUpdate.setInt(2, idBarangBaru); // ID barang yang baru
+                                int rowsAffected = pstmtUpdate.executeUpdate(); // Menjalankan query untuk memperbarui stok               
+                                if (rowsAffected > 0) {
+                                    System.out.println("Jumlah stok berhasil diperbarui untuk barang dengan ID: " + idBarangBaru);
+                                } else {
+                                    System.out.println("Tidak ada stok yang diperbarui. Pastikan ID barang ada di tabel stok.");
+                                }
+                            }
+                        }
+                    } catch (SQLException e) {
+                        System.err.println("Error saat menambahkan barang dan memperbarui stok: " + e.getMessage());
+                    }
+                } else {
+                    System.out.println("Barang sudah ada: " + namaBarang); // Notifikasi jika barang sudah ada
+                }
+            }
             
         }    
     ```
@@ -971,189 +1023,288 @@ Sebelum menjalankan aplikasi ini, pastikan Anda telah memenuhi syarat berikut:
    ```
    - View Stok
    ``` java
-    package View;
-    
-    import Controller.StokController;
-    import java.util.List;
-    import javax.swing.table.DefaultTableModel;
-    
-    public class MenuStok extends javax.swing.JFrame {
-    private StokController stokController;
-        public MenuStok() {
-            initComponents();
-            // Memanggil controller untuk mengatur data barang.
-            stokController = new StokController(this);
-            
-            // Memuat data barang ke tabel saat menu barang dibuat.
-            stokController.loadStokData();
-        }
+  
+        package View;
         
-        public void updateStokTable(List<Object[]> daftarStok) {
-            DefaultTableModel model = (DefaultTableModel) tableStok.getModel(); // Mendapatkan model tabel.
-            model.setRowCount(0); // Menghapus semua baris di tabel sebelum memuat data baru
-            for (Object[] stok : daftarStok) {
-                model.addRow(stok); // Menambahkan setiap baris data stok ke model tabel.
+        import Controller.StokController;
+        import Model.BarangHelper;
+        import java.io.BufferedReader;
+        import java.io.File;
+        import java.io.FileReader;
+        import java.io.IOException;
+        import java.io.PrintWriter;
+        import java.util.List;
+        import javax.swing.JOptionPane;
+        import javax.swing.table.DefaultTableModel;
+        
+        public class MenuStok extends javax.swing.JFrame {
+        private StokController stokController;
+            public MenuStok() {
+                initComponents();
+                // Memanggil controller untuk mengatur data barang.
+                stokController = new StokController(this);
+                
+                // Memuat data barang ke tabel saat menu barang dibuat.
+                stokController.loadStokData();
             }
-        }
-    
-        /**
-         * This method is called from within the constructor to initialize the form.
-         * WARNING: Do NOT modify this code. The content of this method is always
-         * regenerated by the Form Editor.
-         */
-        @SuppressWarnings("unchecked")
-        // <editor-fold defaultstate="collapsed" desc="Generated Code">                          
-        private void initComponents() {
-    
-            jPanel1 = new javax.swing.JPanel();
-            jScrollPane1 = new javax.swing.JScrollPane();
-            tableStok = new javax.swing.JTable();
-            jMenuBar1 = new javax.swing.JMenuBar();
-            menuHome = new javax.swing.JMenu();
-            menuTransaksi = new javax.swing.JMenu();
-            menuBarang = new javax.swing.JMenu();
-    
-            setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
-            setTitle("Aplikasi Inventori Barang || Stok");
-    
-            jPanel1.setBorder(javax.swing.BorderFactory.createTitledBorder(null, "Stok Barang", javax.swing.border.TitledBorder.DEFAULT_JUSTIFICATION, javax.swing.border.TitledBorder.DEFAULT_POSITION, new java.awt.Font("Tahoma", 0, 24))); // NOI18N
-    
-            tableStok.setModel(new javax.swing.table.DefaultTableModel(
-                new Object [][] {
-                    {null, null},
-                    {null, null},
-                    {null, null},
-                    {null, null}
-                },
-                new String [] {
-                    "Nama Barang", "Stok"
+            
+            public void updateStokTable(List<Object[]> daftarStok) {
+                DefaultTableModel model = (DefaultTableModel) tableStok.getModel(); // Mendapatkan model tabel.
+                model.setRowCount(0); // Menghapus semua baris di tabel sebelum memuat data baru
+                for (Object[] stok : daftarStok) {
+                    model.addRow(stok); // Menambahkan setiap baris data stok ke model tabel.
                 }
-            ));
-            jScrollPane1.setViewportView(tableStok);
-    
-            javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
-            jPanel1.setLayout(jPanel1Layout);
-            jPanel1Layout.setHorizontalGroup(
-                jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 648, Short.MAX_VALUE)
-            );
-            jPanel1Layout.setVerticalGroup(
-                jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel1Layout.createSequentialGroup()
-                    .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                    .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 259, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addGap(172, 172, 172))
-            );
-    
-            menuHome.setText("Home");
-            menuHome.addMouseListener(new java.awt.event.MouseAdapter() {
-                public void mouseClicked(java.awt.event.MouseEvent evt) {
-                    menuHomeMouseClicked(evt);
-                }
-            });
-            jMenuBar1.add(menuHome);
-    
-            menuTransaksi.setText("Transaksi");
-            menuTransaksi.addMouseListener(new java.awt.event.MouseAdapter() {
-                public void mouseClicked(java.awt.event.MouseEvent evt) {
-                    menuTransaksiMouseClicked(evt);
-                }
-            });
-            jMenuBar1.add(menuTransaksi);
-    
-            menuBarang.setText("Barang");
-            menuBarang.addMouseListener(new java.awt.event.MouseAdapter() {
-                public void mouseClicked(java.awt.event.MouseEvent evt) {
-                    menuBarangMouseClicked(evt);
-                }
-            });
-            jMenuBar1.add(menuBarang);
-    
-            setJMenuBar(jMenuBar1);
-    
-            javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
-            getContentPane().setLayout(layout);
-            layout.setHorizontalGroup(
-                layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                .addComponent(jPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-            );
-            layout.setVerticalGroup(
-                layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                .addComponent(jPanel1, javax.swing.GroupLayout.PREFERRED_SIZE, 344, javax.swing.GroupLayout.PREFERRED_SIZE)
-            );
-    
-            pack();
-        }// </editor-fold>                        
-    
-        private void menuBarangMouseClicked(java.awt.event.MouseEvent evt) {                                        
-            // TODO add your handling code here:
-            // Membuka form MenuBarang dan menutup form saat ini.
-            new MenuBarang().setVisible(true);
-            dispose();
-        }                                       
-    
-        private void menuTransaksiMouseClicked(java.awt.event.MouseEvent evt) {                                           
-            // TODO add your handling code here:
-            // Membuka form MenuTransaksi dan menutup form saat ini.
-            new MenuTransaksi().setVisible(true);
-            dispose();
-        }                                          
-    
-        private void menuHomeMouseClicked(java.awt.event.MouseEvent evt) {                                      
-            // TODO add your handling code here:
-            // Membuka form MenuHome dan menutup form saat ini.
-            new MenuUtama().setVisible(true);
-            dispose();
-        }                                     
-    
-        /**
-         * @param args the command line arguments
-         */
-        public static void main(String args[]) {
-            /* Set the Nimbus look and feel */
-            //<editor-fold defaultstate="collapsed" desc=" Look and feel setting code (optional) ">
-            /* If Nimbus (introduced in Java SE 6) is not available, stay with the default look and feel.
-             * For details see http://download.oracle.com/javase/tutorial/uiswing/lookandfeel/plaf.html 
+            }
+        
+            /**
+             * This method is called from within the constructor to initialize the form.
+             * WARNING: Do NOT modify this code. The content of this method is always
+             * regenerated by the Form Editor.
              */
-            try {
-                for (javax.swing.UIManager.LookAndFeelInfo info : javax.swing.UIManager.getInstalledLookAndFeels()) {
-                    if ("Nimbus".equals(info.getName())) {
-                        javax.swing.UIManager.setLookAndFeel(info.getClassName());
-                        break;
+            @SuppressWarnings("unchecked")
+            // <editor-fold defaultstate="collapsed" desc="Generated Code">                          
+            private void initComponents() {
+        
+                jPanel1 = new javax.swing.JPanel();
+                jScrollPane1 = new javax.swing.JScrollPane();
+                tableStok = new javax.swing.JTable();
+                btnImport = new javax.swing.JButton();
+                btnExport = new javax.swing.JButton();
+                jMenuBar1 = new javax.swing.JMenuBar();
+                menuHome = new javax.swing.JMenu();
+                menuTransaksi = new javax.swing.JMenu();
+                menuBarang = new javax.swing.JMenu();
+        
+                setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
+                setTitle("Aplikasi Inventori Barang || Stok");
+        
+                jPanel1.setBorder(javax.swing.BorderFactory.createTitledBorder(null, "Stok Barang", javax.swing.border.TitledBorder.DEFAULT_JUSTIFICATION, javax.swing.border.TitledBorder.DEFAULT_POSITION, new java.awt.Font("Tahoma", 0, 24))); // NOI18N
+        
+                tableStok.setModel(new javax.swing.table.DefaultTableModel(
+                    new Object [][] {
+                        {null, null},
+                        {null, null},
+                        {null, null},
+                        {null, null}
+                    },
+                    new String [] {
+                        "Nama Barang", "Stok"
+                    }
+                ));
+                jScrollPane1.setViewportView(tableStok);
+        
+                btnImport.setText("Import");
+                btnImport.addActionListener(new java.awt.event.ActionListener() {
+                    public void actionPerformed(java.awt.event.ActionEvent evt) {
+                        btnImportActionPerformed(evt);
+                    }
+                });
+        
+                btnExport.setText("Export");
+                btnExport.addActionListener(new java.awt.event.ActionListener() {
+                    public void actionPerformed(java.awt.event.ActionEvent evt) {
+                        btnExportActionPerformed(evt);
+                    }
+                });
+        
+                javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
+                jPanel1.setLayout(jPanel1Layout);
+                jPanel1Layout.setHorizontalGroup(
+                    jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(jScrollPane1, javax.swing.GroupLayout.Alignment.TRAILING)
+                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel1Layout.createSequentialGroup()
+                        .addContainerGap(176, Short.MAX_VALUE)
+                        .addComponent(btnExport)
+                        .addGap(150, 150, 150)
+                        .addComponent(btnImport)
+                        .addGap(182, 182, 182))
+                );
+                jPanel1Layout.setVerticalGroup(
+                    jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addGroup(jPanel1Layout.createSequentialGroup()
+                        .addContainerGap()
+                        .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 173, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addGap(48, 48, 48)
+                        .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                            .addComponent(btnImport)
+                            .addComponent(btnExport))
+                        .addContainerGap(47, Short.MAX_VALUE))
+                );
+        
+                menuHome.setText("Home");
+                menuHome.addMouseListener(new java.awt.event.MouseAdapter() {
+                    public void mouseClicked(java.awt.event.MouseEvent evt) {
+                        menuHomeMouseClicked(evt);
+                    }
+                });
+                jMenuBar1.add(menuHome);
+        
+                menuTransaksi.setText("Transaksi");
+                menuTransaksi.addMouseListener(new java.awt.event.MouseAdapter() {
+                    public void mouseClicked(java.awt.event.MouseEvent evt) {
+                        menuTransaksiMouseClicked(evt);
+                    }
+                });
+                jMenuBar1.add(menuTransaksi);
+        
+                menuBarang.setText("Barang");
+                menuBarang.addMouseListener(new java.awt.event.MouseAdapter() {
+                    public void mouseClicked(java.awt.event.MouseEvent evt) {
+                        menuBarangMouseClicked(evt);
+                    }
+                });
+                jMenuBar1.add(menuBarang);
+        
+                setJMenuBar(jMenuBar1);
+        
+                javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
+                getContentPane().setLayout(layout);
+                layout.setHorizontalGroup(
+                    layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(jPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                );
+                layout.setVerticalGroup(
+                    layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(jPanel1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                );
+        
+                pack();
+            }// </editor-fold>                        
+        
+            private void menuBarangMouseClicked(java.awt.event.MouseEvent evt) {                                        
+                // TODO add your handling code here:
+                // Membuka form MenuBarang dan menutup form saat ini.
+                new MenuBarang().setVisible(true);
+                dispose();
+            }                                       
+        
+            private void menuTransaksiMouseClicked(java.awt.event.MouseEvent evt) {                                           
+                // TODO add your handling code here:
+                // Membuka form MenuTransaksi dan menutup form saat ini.
+                new MenuTransaksi().setVisible(true);
+                dispose();
+            }                                          
+        
+            private void menuHomeMouseClicked(java.awt.event.MouseEvent evt) {                                      
+                // TODO add your handling code here:
+                // Membuka form MenuHome dan menutup form saat ini.
+                new MenuUtama().setVisible(true);
+                dispose();
+            }                                     
+        
+            private void btnExportActionPerformed(java.awt.event.ActionEvent evt) {                                          
+                // TODO add your handling code here:
+                // Mendapatkan model dari tabel
+                DefaultTableModel model = (DefaultTableModel) tableStok.getModel();
+                // Menentukan jalur untuk file CSV
+                String filePath = "stok.csv"; // Anda bisa mengubah jalur ini sesuai kebutuhan
+                try (PrintWriter writer = new PrintWriter(new File(filePath))) {
+                    // Menulis header
+                    for (int i = 0; i < model.getColumnCount(); i++) {
+                        writer.print(model.getColumnName(i));
+                        if (i < model.getColumnCount() - 1) {
+                            writer.print(",");
+                        }
+                    }
+                    writer.println();
+                    // Menulis data baris
+                    for (int i = 0; i < model.getRowCount(); i++) {
+                        for (int j = 0; j < model.getColumnCount(); j++) {
+                            writer.print(model.getValueAt(i, j));
+                            if (j < model.getColumnCount() - 1) {
+                                writer.print(",");
+                            }
+                        }
+                        writer.println();
+                    }
+                    JOptionPane.showMessageDialog(this, "Data berhasil diekspor ke " + filePath);
+                } catch (IOException e) {
+                    JOptionPane.showMessageDialog(this, "Terjadi kesalahan saat mengekspor data: " + e.getMessage());
+                }
+            }                                         
+        
+            private void btnImportActionPerformed(java.awt.event.ActionEvent evt) {                                          
+                // TODO add your handling code here:
+                // Menentukan jalur untuk file CSV
+                String filePath = "stok.csv"; // Anda bisa mengubah jalur ini sesuai kebutuhan
+                try (BufferedReader reader = new BufferedReader(new FileReader(filePath))) {
+                String line;
+                reader.readLine(); // Lewati baris header
+                while ((line = reader.readLine()) != null) {
+                    String[] data = line.split(","); // Memisahkan data berdasarkan koma
+                    if (data.length == 2) { // Pastikan ada dua kolom (Nama Barang dan Stok)
+                        String namaBarang = data[0].trim(); // Menghapus spasi di awal dan akhir
+                        String jumlah_stok = data[1].trim(); // Menghapus spasi di awal dan akhir
+                        int stok = Integer.parseInt(jumlah_stok);
+                        // Memeriksa apakah barang sudah ada
+                        BarangHelper barangHelper = new BarangHelper();
+                        if (barangHelper.barangExists(namaBarang)) {
+                            JOptionPane.showMessageDialog(this, "Barang dengan nama '" + namaBarang + "' sudah ada. Barang ini akan diabaikan.", "Duplikat Ditemukan", JOptionPane.WARNING_MESSAGE);
+                        } else {
+                            // Menambahkan barang jika belum ada
+                            barangHelper.cekDanTambahBarang(namaBarang, stok);
+                        }
                     }
                 }
-            } catch (ClassNotFoundException ex) {
-                java.util.logging.Logger.getLogger(MenuStok.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
-            } catch (InstantiationException ex) {
-                java.util.logging.Logger.getLogger(MenuStok.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
-            } catch (IllegalAccessException ex) {
-                java.util.logging.Logger.getLogger(MenuStok.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
-            } catch (javax.swing.UnsupportedLookAndFeelException ex) {
-                java.util.logging.Logger.getLogger(MenuStok.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
-            }
-            //</editor-fold>
-            //</editor-fold>
-            //</editor-fold>
-            //</editor-fold>
-    
-            /* Create and display the form */
-            java.awt.EventQueue.invokeLater(new Runnable() {
-                public void run() {
-                    new MenuStok().setVisible(true);
+                // Setelah import, muat ulang data dari database ke tabel
+                stokController.loadStokData();
+                JOptionPane.showMessageDialog(this, "Data berhasil diimpor dari " + filePath, "Sukses", JOptionPane.INFORMATION_MESSAGE);
+                } catch (IOException e) {
+                    JOptionPane.showMessageDialog(this, "Terjadi kesalahan saat mengimpor data: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
                 }
-            });
+            }                                         
+        
+            /**
+             * @param args the command line arguments
+             */
+            public static void main(String args[]) {
+                /* Set the Nimbus look and feel */
+                //<editor-fold defaultstate="collapsed" desc=" Look and feel setting code (optional) ">
+                /* If Nimbus (introduced in Java SE 6) is not available, stay with the default look and feel.
+                 * For details see http://download.oracle.com/javase/tutorial/uiswing/lookandfeel/plaf.html 
+                 */
+                try {
+                    for (javax.swing.UIManager.LookAndFeelInfo info : javax.swing.UIManager.getInstalledLookAndFeels()) {
+                        if ("Nimbus".equals(info.getName())) {
+                            javax.swing.UIManager.setLookAndFeel(info.getClassName());
+                            break;
+                        }
+                    }
+                } catch (ClassNotFoundException ex) {
+                    java.util.logging.Logger.getLogger(MenuStok.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+                } catch (InstantiationException ex) {
+                    java.util.logging.Logger.getLogger(MenuStok.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+                } catch (IllegalAccessException ex) {
+                    java.util.logging.Logger.getLogger(MenuStok.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+                } catch (javax.swing.UnsupportedLookAndFeelException ex) {
+                    java.util.logging.Logger.getLogger(MenuStok.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+                }
+                //</editor-fold>
+                //</editor-fold>
+                //</editor-fold>
+                //</editor-fold>
+        
+                /* Create and display the form */
+                java.awt.EventQueue.invokeLater(new Runnable() {
+                    public void run() {
+                        new MenuStok().setVisible(true);
+                    }
+                });
+            }
+        
+            // Variables declaration - do not modify                     
+            private javax.swing.JButton btnExport;
+            private javax.swing.JButton btnImport;
+            private javax.swing.JMenuBar jMenuBar1;
+            private javax.swing.JPanel jPanel1;
+            private javax.swing.JScrollPane jScrollPane1;
+            private javax.swing.JMenu menuBarang;
+            private javax.swing.JMenu menuHome;
+            private javax.swing.JMenu menuTransaksi;
+            private javax.swing.JTable tableStok;
+            // End of variables declaration                   
         }
-    
-        // Variables declaration - do not modify                     
-        private javax.swing.JMenuBar jMenuBar1;
-        private javax.swing.JPanel jPanel1;
-        private javax.swing.JScrollPane jScrollPane1;
-        private javax.swing.JMenu menuBarang;
-        private javax.swing.JMenu menuHome;
-        private javax.swing.JMenu menuTransaksi;
-        private javax.swing.JTable tableStok;
-        // End of variables declaration                   
-    }
+
 
    ```
    - View Transaksi
@@ -1864,7 +2015,8 @@ Sebelum menjalankan aplikasi ini, pastikan Anda telah memenuhi syarat berikut:
 
 2. Menu Stok
 
-![Screenshot 2024-11-23 155108](https://github.com/user-attachments/assets/933425a3-f854-46f5-93e8-698a20944887)
+![Screenshot 2024-11-24 003825](https://github.com/user-attachments/assets/9fe7c8ba-ee29-48d3-abdb-3cae63ed1133)
+
 
 3. Menu Barang
 
